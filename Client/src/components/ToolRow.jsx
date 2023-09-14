@@ -10,7 +10,6 @@ const ToolRow = ({
   handleSaveTool,
 }) => {
   const [tool_1,setTool_1] = useState(tool);
-  console.log(tool_1);
   return (
     <>
       <tr
