@@ -435,6 +435,20 @@ const TaskDetails = () => {
             </p>
           </div>
         </div>
+        <div className='md:col-span-2'>
+        <TaskItemContainer
+            items={issues}
+            itemType="issue"
+            isAdmin={isAdmin}
+            deleteItem={handleDeleteIssue}
+            showModal={showIssueModal}
+            setShowModal={setShowIssueModal}
+            allItems={allIssues}
+            selectedItems={selectedIssues}
+            setSelectedItems={setSelectedIssues}
+            handleAddSelectedItems={handleAddSelectedIssues}
+          />
+        </div>
         <div className="md:col-span-2">
           <p className="font-semibold text-lg">
             <span className="text-sm uppercase text-gray-700 font-bold">
@@ -455,20 +469,7 @@ const TaskDetails = () => {
             )}
           </p>
         </div>
-        <div className='md:col-span-2'>
-        <TaskItemContainer
-            items={issues}
-            itemType="issue"
-            isAdmin={isAdmin}
-            deleteItem={handleDeleteIssue}
-            showModal={showIssueModal}
-            setShowModal={setShowIssueModal}
-            allItems={allIssues}
-            selectedItems={selectedIssues}
-            setSelectedItems={setSelectedIssues}
-            handleAddSelectedItems={handleAddSelectedIssues}
-          />
-        </div>
+
         <div className="md:col-span-2">
           <p className="text-sm uppercase text-gray-700 font-bold">Notes:</p>
           <textarea
