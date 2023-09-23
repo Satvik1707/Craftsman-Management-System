@@ -33,8 +33,8 @@ const Users = () => {
 
   const handleInputChange = (e, userId) => {
     e.preventDefault();
-    console.log(e);
-    console.log(userId);
+    // console.log(e);
+    // console.log(userId);
     handleUserInputChange(e, userId, setUsers, users);
   };
   const handleCreate = async (newUser) => {

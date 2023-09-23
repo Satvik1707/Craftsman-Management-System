@@ -118,7 +118,7 @@ exports.deleteTask = async (req, res) => {
     }
     const { taskId } = req.params;
 
-    console.log(taskId);
+    // console.log(taskId);
 
     await pool.query(
       'UPDATE tasks_tools SET task_id = NULL WHERE task_id = $1;',
@@ -138,7 +138,7 @@ exports.deleteTask = async (req, res) => {
     );
     const task = taskRows[0];
 
-    console.log((task));
+    // console.log((task));
 
     if (
       !task ||

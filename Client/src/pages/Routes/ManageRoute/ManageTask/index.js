@@ -129,7 +129,7 @@ const TaskDetails = () => {
           },
         }
       );
-      console.log(issuesResponse.data)
+      // console.log(issuesResponse.data)
       setIssues(issuesResponse.data);
 
       setShowIssueModal(false);

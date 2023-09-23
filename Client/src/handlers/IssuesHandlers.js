@@ -69,7 +69,7 @@ export const handleAddIssue = async (
 export const handleIssueInputChange = (e, issueId, setIssues, issues) => {
   // const element = e.target
   const { name, value } = e.target;
-  console.log(e);
+  // console.log(e);
 
   setIssues(
     issues.map((issue) =>

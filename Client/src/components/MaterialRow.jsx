@@ -23,7 +23,7 @@ const MaterialRow = ({
             <input
               type="text"
               name="material_name"
-              value={material.material_name}
+              // value={material.material_name}
               onChange={(e) =>
                 handleMaterialInputChange(e, material.material_id)
               }

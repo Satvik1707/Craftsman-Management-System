@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       );
 
       const token = response.data.token;
-      console.log(token);
+      // console.log(token);
       setCookie('token', token, 3);
       await fetchCurrentUserData(token);
       router.push('/Routes');
