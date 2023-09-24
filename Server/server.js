@@ -59,6 +59,13 @@ app.put(
   authenticateToken,
   routesController.updateRoute
 );
+
+app.get(
+  '/api/routes/:routeId',
+  authenticateToken,
+  routesController.getTasksForRoute
+);
+
 app.delete(
   '/api/routes/:routeId',
   authenticateToken,

@@ -84,15 +84,24 @@ const RouteRow = ({
             {moment(route.created_at).fromNow()}
           </td>
         )}
-        <td className="py-2 px-6 text-left whitespace-nowrap">
-          <span
-            className={`uppercase text-white text-xs ${
-              !unassigned ? 'bg-red-800' : 'bg-yellow-600'
-            } font-semibold px-2 rounded-full py-1`}
-          >
-            {unassigned ? 'Unassigned' : route.status}
-          </span>
-        </td>
+<td className="py-2 px-6 text-left whitespace-nowrap">
+  <span
+    className={`uppercase text-white text-xs font-semibold px-2 rounded-full py-1 ${
+      isRouteCompleted
+        ? 'bg-green-700' // Green background for Completed
+        : !unassigned
+        ? 'bg-red-800' // Red background for Pending
+        : 'bg-yellow-600' // Yellow background for Unassigned
+    }`}
+  >
+    {unassigned
+      ? 'Unassigned'
+      : isRouteCompleted
+      ? 'Completed'
+      : route.status}
+  </span>
+</td>
+
         {isAdmin && (
           <>
             <td className="py-2 px-6 text-left whitespace-nowrap">
