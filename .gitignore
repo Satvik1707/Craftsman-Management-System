@@ -2,5 +2,4 @@
 cms-client-container.tar
 cms-db.sql
 .vscode/settings.json
-Client/src/components/TasksList.jsx
 RenderPSQL.session.sql
