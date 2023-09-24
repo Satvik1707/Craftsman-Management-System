@@ -60,11 +60,7 @@ app.put(
   routesController.updateRoute
 );
 
-app.get(
-  '/api/routes/:routeId',
-  authenticateToken,
-  routesController.getTasksForRoute
-);
+app.get('/api/routes/:routeId',authenticateToken,routesController.fetchTasksForRoutes)
 
 app.delete(
   '/api/routes/:routeId',

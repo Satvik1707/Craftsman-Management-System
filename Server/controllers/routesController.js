@@ -18,6 +18,23 @@ exports.getRoutes = async (req, res) => {
   }
 };
 
+exports.fetchTasksForRoutes = async (req,res) => {
+  try{
+    const {routeId} = req.params;
+    const {rows} = await pool.query(
+      'SELECT * FROM tasks WHERE route_id = $1;',
+      [routeId]
+    )
+
+    console.log(rows);
+    res.status(200).json(rows);
+
+  } catch (error) { 
+    console.error(error);
+    res.status(500).json({ message: 'Error fetching tasks' });
+  }
+}
+
 exports.createRoute = async (req, res) => {
   try {
     if (req.user.role !== 'admin') {

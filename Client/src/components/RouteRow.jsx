@@ -1,9 +1,9 @@
 import React from 'react';
-import { useState } from 'react';
 import { FaTrash, FaEdit, FaSave } from 'react-icons/fa';
 import withAuth from '../utils/withAuth';
 import Link from 'next/link';
 import moment from 'moment';
+
 const RouteRow = ({
   route,
   unassigned,
@@ -16,7 +16,10 @@ const RouteRow = ({
   getUsernameById,
   users,
   isAdmin,
+  isRouteComplete
 }) => {
+
+  const isRouteCompleted = isRouteComplete;
   return (
     <>
       <tr

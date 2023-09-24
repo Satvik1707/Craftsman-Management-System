@@ -16,18 +16,31 @@ import {
   handleCancelDeleteRoute,
   handleRouteInputChange,
   handleCreateRoute,
+  handleFetchTasksRoutes
 } from '../../handlers/RoutesHandlers';
+
 const Routes = () => {
+
   const { currentUser, SERVER_URL, token, isAdmin } = useContext(AuthContext);
+
   const [routes, setRoutes] = useRoutes(SERVER_URL, token);
+  
   const [users, setUsers] = useUsers(SERVER_URL, token);
+  
   const [showCreateRouteModal, setShowCreateRouteModal] = useState(false);
+  
   const [newRouteName, setNewRouteName] = useState('');
+  
   const [selectedUser, setSelectedUser] = useState(null);
+  
   const [showUserDetailsModal, setShowUserDetailsModal] = useState(false);
+  
   const [editRouteId, setEditRouteId] = useState(null);
-  const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] =
-    useState(false);
+  
+  const [showDeleteConfirmationModal, setShowDeleteConfirmationModal] = useState(false);
+
+
+
   const [routeToDelete, setRouteToDelete] = useState(null);
 
   const handleEdit = (routeId) => {
@@ -37,6 +50,7 @@ const Routes = () => {
   const handleSave = (routeId) => {
     handleSaveRoute(routeId, routes, setRoutes, setEditRouteId);
   };
+
   const handleDelete = (routeId) => {
     handleDeleteRoute(
       routeId,
@@ -62,6 +76,7 @@ const Routes = () => {
   const handleInputChange = (e, routeId) => {
     handleRouteInputChange(e, routeId, routes, setRoutes);
   };
+
   const handleCreate = () => {
     handleCreateRoute(
       newRouteName,
@@ -71,6 +86,7 @@ const Routes = () => {
       setShowCreateRouteModal
     );
   };
+  
   const handleUserClick = (userId) => {
     const user = users.find((u) => u.user_id === userId);
     if (user) {
@@ -83,6 +99,38 @@ const Routes = () => {
     const user = users.find((u) => u.user_id === userId);
     return user ? user.username : '';
   };
+
+
+  const [tasks, setTasks] = useState([]);
+
+  const fetchTasksForRoute = async (routeId) => {
+    try {
+      const response = await fetch(`${SERVER_URL}api/routes/${routeId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include the bearer token in the headers
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(data); 
+      } else {
+        console.error('Error fetching tasks');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    
+    if (routes && routes.length > 0) {
+      
+      const firstRouteId = routes[0].route_id;
+      fetchTasksForRoute(firstRouteId);
+    }
+  }, [routes]);
+
+  const isRouteComplete = tasks.every((task) => task.status === "complete");
+  console.log(isRouteComplete)
 
   const renderRouteRow = (route, unassigned = false) => {
     return (
@@ -99,6 +147,7 @@ const Routes = () => {
         getUsernameById={getUsernameById}
         users={users}
         isAdmin={isAdmin}
+        isRouteComplete={isRouteComplete}
       />
     );
   };
