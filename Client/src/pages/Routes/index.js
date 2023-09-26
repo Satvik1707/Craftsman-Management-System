@@ -130,7 +130,7 @@ const Routes = () => {
   }, [routes]);
 
   const isRouteComplete = tasks.every((task) => task.status === "complete");
-  console.log(isRouteComplete)
+  // console.log(isRouteComplete)
 
   const renderRouteRow = (route, unassigned = false) => {
     return (

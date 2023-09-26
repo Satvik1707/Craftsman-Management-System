@@ -25,8 +25,6 @@ exports.fetchTasksForRoutes = async (req,res) => {
       'SELECT * FROM tasks WHERE route_id = $1;',
       [routeId]
     )
-
-    console.log(rows);
     res.status(200).json(rows);
 
   } catch (error) { 

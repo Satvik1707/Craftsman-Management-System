@@ -56,6 +56,7 @@ const TaskList = ({
     }
     await updateOptimizedTasks();
   };
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -76,14 +77,22 @@ const TaskList = ({
   }, [token, SERVER_URL]);
 
 
-  const updateOptimizedTasks = async () => {
+  const updateOptimizedTasks = async (incompleteTasks) => {
+    console.log("abc",incompleteTasks);
+    console.log("checked tasks",checkedTasks)
     try {
       setIsRefreshing(true);
-      const tasksToOptimize = incompleteTasks.filter((task) =>
-      
-        checkedTasks.includes(task.task_id)
+
+      let tasksToOptimize = incompleteTasks.filter((task) =>{
+        console.log(checkedTasks.includes(task.task_id));
+        return checkedTasks.includes(task.task_id)
+      }
+
 
       );
+      console.log(tasksToOptimize,"tasks to optimise")
+      
+      console.log("Hi")
 
       const optimizedTasksList = await calculateOptimizedRoute(
         officeLatitude,
@@ -91,8 +100,8 @@ const TaskList = ({
         tasksToOptimize,
         userLocation
       );
-
-      console.log(optimizedTasksList)
+      
+      console.log(optimizedTasksList,"optimised")
 
       if (optimizedTasksList) {
         const optimizedIncompleteTasks = optimizedTasksList.map((taskId) =>
@@ -119,14 +128,14 @@ const TaskList = ({
   };
 
   useEffect(() => {
-    const incompleteTasks = tasks.filter((task) => task.status !== 'complete');
-    const completedTasks = tasks.filter((task) => task.status === 'complete');
-
+    let incompleteTasks = tasks.filter((task) => task.status !== 'complete');
+    let completedTasks = tasks.filter((task) => task.status === 'complete');
+    console.log("incomplete:", incompleteTasks)
+    console.log("complete: ",completedTasks);
     setIncompleteTasks(incompleteTasks);
     setCompletedTasks(completedTasks);
     setCheckedTasks(incompleteTasks.map((task) => task.task_id));
-    updateOptimizedTasks();
-    // window.location.reload();
+    updateOptimizedTasks(incompleteTasks);
   }, [tasks]);
 
   
@@ -163,7 +172,8 @@ const TaskList = ({
   };
 
   const taskListToRender = incompleteTasks.concat(completedTasks);
-
+  console.log(taskListToRender,"task list")
+  console.log(incompleteTasks,"incomplete")
   return (
     <div>
       {isAdmin && (
