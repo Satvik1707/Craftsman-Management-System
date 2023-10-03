@@ -54,6 +54,7 @@ const createTables = async () => {
         route_name VARCHAR(255) NOT NULL,
         employee_id INT NOT NULL,
         status VARCHAR(255) NOT NULL,
+        optimised_path INT[] DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (employee_id) REFERENCES users (user_id)

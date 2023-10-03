@@ -68,6 +68,8 @@ app.delete(
   routesController.deleteRoute
 );
 
+app.put('/api/routeupdate/:routeId', authenticateToken, routesController.updateOptimisedPath)
+
 //tasks
 app.get('/api/tasks/:routeId', authenticateToken, tasksController.getTasks);
 app.get(

@@ -29,11 +29,10 @@ const TaskList = ({
   const [officeAddress, setOfficeAddress] = useState('');
   const [officeLatitude, setOfficeLatitude] = useState(null);
   const [officeLongitude, setOfficeLongitude] = useState(null);
+  const [desiredOrder, setDesiredOrder] = useState([]);
+  const [optimizedTasksList, setOptimizedTasksList] = useState([])
 
-  const userLocation = useMemo(
-    () => ({ lat: userLatitude, lng: userLongitude }),
-    [userLatitude, userLongitude]
-  );
+
 
   const deleteButton = (task_id) => {
     return isAdmin ? (
@@ -76,32 +75,37 @@ const TaskList = ({
     fetchSettings();
   }, [token, SERVER_URL]);
 
+  const updateRoute = async() => {
+    try {
+      const response = await axios.put(
+        `${SERVER_URL}api/routeupdate/${routeId}`,
+        {
+          optimised_path: optimizedTasksList,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+        );
+        console.log(optimizedTasksList)
+    } catch (error) {
+      console.error('Error fetching desired order:', error);
+    }
+  }
 
-  const updateOptimizedTasks = async (incompleteTasks) => {
-    console.log("abc",incompleteTasks);
-    console.log("checked tasks",checkedTasks)
+  const updateOptimizedTasks = async () => {
     try {
       setIsRefreshing(true);
-
-      let tasksToOptimize = incompleteTasks.filter((task) =>{
-        console.log(checkedTasks.includes(task.task_id));
-        return checkedTasks.includes(task.task_id)
-      }
-
-
+      const tasksToOptimize = incompleteTasks.filter((task) =>
+        checkedTasks.includes(task.task_id)
       );
-      console.log(tasksToOptimize,"tasks to optimise")
-      
-      console.log("Hi")
-
       const optimizedTasksList = await calculateOptimizedRoute(
         officeLatitude,
         officeLongitude,
-        tasksToOptimize,
-        userLocation
+        tasksToOptimize
       );
-      
-      console.log(optimizedTasksList,"optimised")
+
+      updateRoute();
+
 
       if (optimizedTasksList) {
         const optimizedIncompleteTasks = optimizedTasksList.map((taskId) =>
@@ -117,7 +121,7 @@ const TaskList = ({
           ...optimizedIncompleteTasks,
           ...uncheckedTasks,
         ];
-
+        setOptimizedTasksList(optimizedTasksList);
         setIncompleteTasks(updatedIncompleteTasks);
       }
     } catch (error) {
@@ -127,18 +131,15 @@ const TaskList = ({
     }
   };
 
+
+
   useEffect(() => {
     let incompleteTasks = tasks.filter((task) => task.status !== 'complete');
     let completedTasks = tasks.filter((task) => task.status === 'complete');
-    console.log("incomplete:", incompleteTasks)
-    console.log("complete: ",completedTasks);
     setIncompleteTasks(incompleteTasks);
     setCompletedTasks(completedTasks);
     setCheckedTasks(incompleteTasks.map((task) => task.task_id));
-    updateOptimizedTasks(incompleteTasks);
   }, [tasks]);
-
-  
 
   const handleDeleteTask = async (routeId, taskId) => {
     try {
@@ -171,50 +172,88 @@ const TaskList = ({
     }
   };
 
+  useEffect(() => {
+    const fetchDesiredOrder = async () => {
+      try {
+        const response = await axios.get(`${SERVER_URL}api/routes`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const allRoutes = response.data;
+        const targetRouteId = routeId;
+        var foundRoute = null;
+
+        for (var i = 0; i < allRoutes.length; i++) {
+          if (allRoutes[i].route_id.toString() === targetRouteId) {
+            foundRoute = allRoutes[i];
+            break;
+          }
+        }
+        setDesiredOrder(foundRoute.optimised_path);
+      } catch (error) {
+        console.error('Error fetching desired order:', error);
+      }
+    };
+
+    fetchDesiredOrder();
+  }, []);
   const taskListToRender = incompleteTasks.concat(completedTasks);
-  console.log(taskListToRender,"task list")
-  console.log(incompleteTasks,"incomplete")
+  const customSort = (a, b) => {
+    const indexA = desiredOrder.indexOf(a.task_id);
+    const indexB = desiredOrder.indexOf(b.task_id);
+
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+
+    return indexA - indexB;
+  };
+  taskListToRender.sort(customSort);
+
   return (
     <div>
       {isAdmin && (
-      <button
-        type="button"
-        className="w-full md:w-fit justify-center border-2 border-green-500 text-green-500 px-2 my-2 rounded flex items-center"
-        onClick={updateOptimizedTasks}
-        disabled={isRefreshing}
-      >
-        {isRefreshing ? (
-          'Optimising...'
-        ) : (
-          <>
-            <span className="mr-2">Optimize Route</span>
-            <FaLocationArrow />
-          </>
-        )}
-      </button>
-    )}
+        <button
+          type="button"
+          className="w-full md:w-fit justify-center border-2 border-green-500 text-green-500 px-2 my-2 rounded flex items-center"
+          onClick={updateOptimizedTasks}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? (
+            'Optimising...'
+          ) : (
+            <>
+              <span className="mr-2">Optimize Route</span>
+              <FaLocationArrow />
+            </>
+          )}
+        </button>
+      )}
 
       <h3 className="text-2xl font-semibold mb-2">Pending Tasks</h3>
       {isAdmin && (
-      <>
-      <div className="border-gray-200 hover:bg-gray-50 w-full">
-        <div className="py-2 px-1 text-left whitespace-nowrap w-full items-center md:w-fit flex md:flex-row flex-col md:text-md text-sm">
-          <p className="uppercase text-white bg-purple-700 font-semibold py-1 text-xs px-2 md:mr-2 rounded-md my-1">
-            <FaMapPin className="inline-block mr-2  text-white" />
-            Start
-          </p>{' '}
-          <div className="text-md w-full overflow-x-scroll">
-            Office: {officeName} - {officeAddress}
+        <>
+          <div className="border-gray-200 hover:bg-gray-50 w-full">
+            <div className="py-2 px-1 text-left whitespace-nowrap w-full items-center md:w-fit flex md:flex-row flex-col md:text-md text-sm">
+              <p className="uppercase text-white bg-purple-700 font-semibold py-1 text-xs px-2 md:mr-2 rounded-md my-1">
+                <FaMapPin className="inline-block mr-2  text-white" />
+                Start
+              </p>{' '}
+              <div className="text-md w-full overflow-x-scroll">
+                Office: {officeName} - {officeAddress}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      </>)}
+        </>
+      )}
 
       <div className="overflow-x-auto">
         <table className="table-auto w-full bg-white shadow-md rounded-md">
           <thead>
             <tr className="text-gray-600 uppercase text-sm leading-normal">
-              {isAdmin && (<><th className="py-3 px-6 text-left">En-route</th></>)}
+              {isAdmin && (
+                <>
+                  <th className="py-3 px-6 text-left">En-route</th>
+                </>
+              )}
               <th className="py-3 px-6 text-left">Task Name</th>
               <th className="py-3 px-6 text-left">Status</th>
             </tr>
@@ -228,26 +267,28 @@ const TaskList = ({
                     key={task.task_id}
                     className="border-b border-gray-200 hover:bg-gray-50"
                   >
-                    {isAdmin && (<>
-                      <td className="py-2 px-6 text-left whitespace-nowrap text-base">
-                      <button
-                        type="button"
-                        className={`${
-                          checkedTasks.includes(task.task_id)
-                            ? 'text-green-500'
-                            : 'text-gray-600'
-                        } focus:outline-none scale-125`}
-                        onClick={() => handleToggleTask(task.task_id)}
-                      >
-                        {checkedTasks.includes(task.task_id) ? (
-                          <FaToggleOn />
-                        ) : (
-                          <FaToggleOff />
-                        )}
-                      </button>
-                    </td>
-                    </>)}
-                    
+                    {isAdmin && (
+                      <>
+                        <td className="py-2 px-6 text-left whitespace-nowrap text-base">
+                          <button
+                            type="button"
+                            className={`${
+                              checkedTasks.includes(task.task_id)
+                                ? 'text-green-500'
+                                : 'text-gray-600'
+                            } focus:outline-none scale-125`}
+                            onClick={() => handleToggleTask(task.task_id)}
+                          >
+                            {checkedTasks.includes(task.task_id) ? (
+                              <FaToggleOn />
+                            ) : (
+                              <FaToggleOff />
+                            )}
+                          </button>
+                        </td>
+                      </>
+                    )}
+
                     <td className="py-2 px-6 text-left whitespace-nowrap text-base">
                       <Link
                         href={{
@@ -281,26 +322,32 @@ const TaskList = ({
           </tbody>
         </table>
       </div>
-      {isAdmin && (<>
-        <div className="border-gray-200 hover:bg-gray-50">
-        <div className="py-2 px-1 text-left whitespace-nowrap items-center w-full md:w-fit flex md:flex-row flex-col md:text-md text-sm">
-          <p className="uppercase text-white bg-green-700 font-semibold py-1 text-xs px-2 md:mr-2 rounded-md my-1">
-            <FaMapPin className="inline-block mr-2  text-white" />
-            Destination
-          </p>{' '}
-          <div className="text-md w-full overflow-x-scroll">
-            Office: {officeName} - {officeAddress}
+      {isAdmin && (
+        <>
+          <div className="border-gray-200 hover:bg-gray-50">
+            <div className="py-2 px-1 text-left whitespace-nowrap items-center w-full md:w-fit flex md:flex-row flex-col md:text-md text-sm">
+              <p className="uppercase text-white bg-green-700 font-semibold py-1 text-xs px-2 md:mr-2 rounded-md my-1">
+                <FaMapPin className="inline-block mr-2  text-white" />
+                Destination
+              </p>{' '}
+              <div className="text-md w-full overflow-x-scroll">
+                Office: {officeName} - {officeAddress}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      </>)}
+        </>
+      )}
 
       <h3 className="text-2xl font-semibold mb-2 mt-4">Completed Tasks</h3>
       <div className="overflow-x-auto mb-8">
         <table className="table-auto w-full bg-white shadow-md rounded-md">
           <thead>
             <tr className="text-gray-600 uppercase text-sm leading-normal">
-              {isAdmin && (<><th className="py-3 px-6 text-left">Task ID</th></>)}
+              {isAdmin && (
+                <>
+                  <th className="py-3 px-6 text-left">Task ID</th>
+                </>
+              )}
               <th className="py-3 px-6 text-left">Task Name</th>
               <th className="py-3 px-6 text-left">Status</th>
             </tr>
@@ -311,11 +358,13 @@ const TaskList = ({
                 key={task.task_id}
                 className="border-b border-gray-200 hover:bg-gray-50"
               >
-                {isAdmin && (<>
-                  <td className="px-6 text-left whitespace-nowrap text-base py-1">
-                  {task.task_id}
-                </td>
-                </>)}
+                {isAdmin && (
+                  <>
+                    <td className="px-6 text-left whitespace-nowrap text-base py-1">
+                      {task.task_id}
+                    </td>
+                  </>
+                )}
 
                 <td className="px-6 text-left whitespace-nowrap text-base">
                   <Link

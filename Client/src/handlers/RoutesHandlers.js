@@ -5,6 +5,7 @@ const SERVER_URL =
     ? process.env.NEXT_PUBLIC_SERVER_URL_PROD
     : process.env.NEXT_PUBLIC_SERVER_URL_DEV;
 const token = getCookie('token');
+
 export const handleEditRoute = (routeId, setEditRouteId) => {
   setEditRouteId(routeId);
 };
@@ -117,3 +118,7 @@ export const handleCreateRoute = async (
   setNewRouteName('');
   setShowCreateRouteModal(false);
 };
+
+export const updateRoute = async () => {
+
+}
