@@ -1,21 +1,22 @@
-const { Client } = require('pg');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-// Construct the connection string based on the environment
-const connectionString =
+const credentials =
   process.env.NODE_ENV === 'production'
-    ? `postgres://satvik0125:pVoFMOxX94Na@ep-flat-moon-36733642.us-east-2.aws.neon.tech/Test2`
-    : `postgres://satvik0125:pVoFMOxX94Na@ep-flat-moon-36733642.us-east-2.aws.neon.tech/Test2`;
+    ? {
+        user: process.env.DB_USER_PROD,
+        host: process.env.DB_HOST_PROD,
+        database: process.env.DB_NAME_PROD,
+        password: process.env.DB_PASSWORD_PROD,
+        port: process.env.DB_PORT_PROD,
+      }
+    : {
+        user: process.env.DB_USER_DEV,
+        host: process.env.DB_HOST_DEV,
+        database: process.env.DB_NAME_DEV,
+        password: process.env.DB_PASSWORD_DEV,
+        port: process.env.DB_PORT_DEV,
+      };
 
-// Create a new PostgreSQL client
-const pool = new Client({
-  connectionString: connectionString,
-  ssl: {
-    rejectUnauthorized: true, // Set to false if your server uses a self-signed certificate
-  },
-});
-
-// Connect to the PostgreSQL database
-pool.connect();
-
+const pool = new Pool(credentials);
 module.exports = { pool };
