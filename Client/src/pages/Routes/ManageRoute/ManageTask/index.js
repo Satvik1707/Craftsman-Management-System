@@ -8,6 +8,7 @@ import TaskItemContainer from '../../../../components/TaskItemContainer';
 import { AuthContext } from '../../../../context/authContext';
 import Link from 'next/link';
 import { HiExternalLink } from 'react-icons/hi';
+import { FaCopy } from 'react-icons/fa';
 
 const TaskDetails = () => {
   const { currentUser, SERVER_URL, token, isAdmin } = useContext(AuthContext);
@@ -36,6 +37,13 @@ const TaskDetails = () => {
 
   const [allTools, setAllTools] = useState([]);
   const [selectedTools, setSelectedTools] = useState([]);
+
+  const copyToClipboard = () => {
+    const stringToCopy = items
+      .map((item, index) => `${index + 1}. ${item[itemName]}`)
+      .join('\n');
+    navigator.clipboard.writeText(stringToCopy);
+  };
 
   const handleAddSelectedMaterials = async () => {
     const materialIds = selectedMaterials.map((material) => material.value);
@@ -129,7 +137,6 @@ const TaskDetails = () => {
           },
         }
       );
-      // console.log(issuesResponse.data)
       setIssues(issuesResponse.data);
 
       setShowIssueModal(false);
@@ -436,6 +443,12 @@ const TaskDetails = () => {
           </div>
         </div>
         <div className='md:col-span-2'>
+        <p className="text-sm uppercase text-gray-700 font-bold">
+          Issues&nbsp;&nbsp;
+          <button onClick={copyToClipboard}>
+            <FaCopy className="hover:text-gray-500" />
+          </button>
+        </p>
         <TaskItemContainer
             items={issues}
             itemType="issue"

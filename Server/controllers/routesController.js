@@ -21,11 +21,8 @@ exports.getRoutes = async (req, res) => {
 exports.updateOptimisedPath = async(req,res) => {
   try {
     const {routeId} = req.params
-    console.log(req.body.optimised_path)
-    console.log(routeId)
   const {rows} = await pool.query('UPDATE routes SET optimised_path = $1 WHERE route_id = $2 RETURNING *',
   [req.body.optimised_path, routeId])
-  console.log(rows)
   res.status(200).json(rows)
     
   } catch (error) {

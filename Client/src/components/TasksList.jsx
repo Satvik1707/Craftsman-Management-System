@@ -9,6 +9,7 @@ import {
   FaMapPin,
 } from 'react-icons/fa';
 import withAuth from '../utils/withAuth';
+import TaskItemContainer from '../components/TaskItemContainer';
 import calculateOptimizedRoute from '../utils/optimizeRoute';
 
 import Link from 'next/link';
@@ -21,6 +22,7 @@ const TaskList = ({
   setTasks,
 }) => {
   const { SERVER_URL, token, isAdmin } = useContext(AuthContext);
+  const [taskIssues, setTaskIssues] = useState({});
   const [checkedTasks, setCheckedTasks] = useState([]);
   const [completedTasks, setCompletedTasks] = useState([]);
   const [incompleteTasks, setIncompleteTasks] = useState([]);
@@ -30,9 +32,7 @@ const TaskList = ({
   const [officeLatitude, setOfficeLatitude] = useState(null);
   const [officeLongitude, setOfficeLongitude] = useState(null);
   const [desiredOrder, setDesiredOrder] = useState([]);
-  const [optimizedTasksList, setOptimizedTasksList] = useState([])
-
-
+  const [optimizedTasksList, setOptimizedTasksList] = useState([]);
 
   const deleteButton = (task_id) => {
     return isAdmin ? (
@@ -54,6 +54,7 @@ const TaskList = ({
       setCheckedTasks([...checkedTasks, taskId]);
     }
     await updateOptimizedTasks();
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -75,7 +76,35 @@ const TaskList = ({
     fetchSettings();
   }, [token, SERVER_URL]);
 
-  const updateRoute = async() => {
+
+  useEffect(() => {
+    const fetchTaskIssues = async (taskId) => {
+      try {
+        const response = await axios.get(
+          `${SERVER_URL}api/tasks/${routeId}/${taskId}/issues`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setTaskIssues((prev) => ({
+          ...prev,
+          [taskId]: response.data,
+        }));
+      } catch (error) {
+        console.error('Error fetching task issues:', error);
+      }
+    };
+
+    tasks.forEach((task) => {
+      fetchTaskIssues(task.task_id);
+    });
+  }, [tasks, routeId, SERVER_URL, token]);
+
+
+
+  const updateRoute = async () => {
     try {
       const response = await axios.put(
         `${SERVER_URL}api/routeupdate/${routeId}`,
@@ -85,12 +114,11 @@ const TaskList = ({
         {
           headers: { Authorization: `Bearer ${token}` },
         }
-        );
-        console.log(optimizedTasksList)
+      );
     } catch (error) {
       console.error('Error fetching desired order:', error);
     }
-  }
+  };
 
   const updateOptimizedTasks = async () => {
     try {
@@ -105,7 +133,6 @@ const TaskList = ({
       );
 
       updateRoute();
-
 
       if (optimizedTasksList) {
         const optimizedIncompleteTasks = optimizedTasksList.map((taskId) =>
@@ -130,8 +157,6 @@ const TaskList = ({
       setIsRefreshing(false);
     }
   };
-
-
 
   useEffect(() => {
     let incompleteTasks = tasks.filter((task) => task.status !== 'complete');
@@ -196,6 +221,7 @@ const TaskList = ({
 
     fetchDesiredOrder();
   }, []);
+
   const taskListToRender = incompleteTasks.concat(completedTasks);
   const customSort = (a, b) => {
     const indexA = desiredOrder.indexOf(a.task_id);
@@ -255,7 +281,9 @@ const TaskList = ({
                 </>
               )}
               <th className="py-3 px-6 text-left">Task Name</th>
+              <th className="py-3 px-6 text-left">Issues</th>
               <th className="py-3 px-6 text-left">Status</th>
+              <th className="py-3 px-6 text-left">Delete</th>
             </tr>
           </thead>
           <tbody className="text-gray-600 text-base">
@@ -263,6 +291,7 @@ const TaskList = ({
               index = index + 1;
               return (
                 task.status !== 'complete' && (
+                  <>
                   <tr
                     key={task.task_id}
                     className="border-b border-gray-200 hover:bg-gray-50"
@@ -303,6 +332,18 @@ const TaskList = ({
                         {task.task_name}
                       </Link>
                     </td>
+                    <td>
+                      <TaskItemContainer
+                          items={(taskIssues[task.task_id] || []).slice(0, 3)}
+                          itemType="issue"
+                          isAdmin={false}
+                          deleteItem={(issueId) =>
+                            handleDeleteIssue(routeId, issueId)
+                          }
+                          random = {true}
+                        />
+                      
+                      </td>
                     <td className="py-2 px-6 text-left whitespace-nowrap text-xs">
                       <span
                         className={`uppercase text-white ${
@@ -316,6 +357,7 @@ const TaskList = ({
                     </td>
                     {deleteButton(task.task_id)}
                   </tr>
+                  </>
                 )
               );
             })}
@@ -354,43 +396,49 @@ const TaskList = ({
           </thead>
           <tbody className="text-gray-600 text-base">
             {completedTasks.map((task) => (
-              <tr
-                key={task.task_id}
-                className="border-b border-gray-200 hover:bg-gray-50"
-              >
-                {isAdmin && (
-                  <>
-                    <td className="px-6 text-left whitespace-nowrap text-base py-1">
-                      {task.task_id}
-                    </td>
-                  </>
-                )}
+              <>
+                {' '}
+                <tr
+                  key={task.task_id}
+                  className="border-b border-gray-200 hover:bg-gray-50"
+                >
+                  {isAdmin && (
+                    <>
+                      <td className="px-6 text-left whitespace-nowrap text-base py-1">
+                        {task.task_id}
+                      </td>
+                    </>
+                  )}
 
-                <td className="px-6 text-left whitespace-nowrap text-base">
-                  <Link
-                    href={{
-                      pathname: `/Routes/ManageRoute/ManageTask`,
-                      query: {
-                        routeId: routeId,
-                        taskId: task.task_id,
-                      },
-                    }}
-                    className="text-blue-500 hover:text-blue-700 cursor-pointer"
-                  >
-                    {task.task_name}
-                  </Link>
-                </td>
-                <td className="px-6 text-left whitespace-nowrap text-xs">
-                  <span
-                    className={`uppercase text-white ${
-                      task.status === 'pending' ? 'bg-red-800' : 'bg-green-700'
-                    } font-semibold text-xs px-2 py-1 rounded-full mb-2`}
-                  >
-                    {task.status}
-                  </span>
-                </td>
-                {deleteButton(task.task_id)}
-              </tr>
+                  <td className="px-6 text-left whitespace-nowrap text-base">
+                    <Link
+                      href={{
+                        pathname: `/Routes/ManageRoute/ManageTask`,
+                        query: {
+                          routeId: routeId,
+                          taskId: task.task_id,
+                        },
+                      }}
+                      className="text-blue-500 hover:text-blue-700 cursor-pointer"
+                    >
+                      {task.task_name}
+                    </Link>
+                  </td>
+                  <td className="px-6 text-left whitespace-nowrap text-xs">
+                    <span
+                      className={`uppercase text-white ${
+                        task.status === 'pending'
+                          ? 'bg-red-800'
+                          : 'bg-green-700'
+                      } font-semibold text-xs px-2 py-1 rounded-full mb-2`}
+                    >
+                      {task.status}
+                    </span>
+                  </td>
+                  {deleteButton(task.task_id)}
+                </tr>
+
+              </>
             ))}
           </tbody>
         </table>
